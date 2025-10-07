@@ -3,9 +3,9 @@ import random
 import sys
 import os
 
-# === Game settings ===
+
 WIDTH, HEIGHT = 700, 800
-LANES = [140, 350, 560]  # centered inside lanes (not on dividers)
+LANES = [140, 350, 560]  
 MATATU_WIDTH, MATATU_HEIGHT = 60, 120
 OBSTACLE_WIDTH, OBSTACLE_HEIGHT = 60, 120
 ZEBRA_HEIGHT = 30
@@ -16,7 +16,6 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Autonomous Matatu Simulator')
 clock = pygame.time.Clock()
 
-# === Safe image loading function ===
 ASSETS = os.path.join(os.path.dirname(__file__), 'assets')
 
 def safe_load(path, size, color=(200, 0, 0)):
@@ -28,8 +27,6 @@ def safe_load(path, size, color=(200, 0, 0)):
         surf = pygame.Surface(size)
         surf.fill(color)
         return surf
-
-# === Load images safely ===
 MATATU_IMG = safe_load(os.path.join(ASSETS, 'matatuu.png'), (MATATU_WIDTH, MATATU_HEIGHT), (0, 200, 0))
 CAR_IMGS = [
     safe_load(os.path.join(ASSETS, f'car{i}.png'), (OBSTACLE_WIDTH, OBSTACLE_HEIGHT), (200, 200, 0))
@@ -38,7 +35,6 @@ CAR_IMGS = [
 ROAD_IMG = safe_load(os.path.join(ASSETS, 'road.png'), (WIDTH, HEIGHT), (70, 70, 70)) \
     if os.path.exists(os.path.join(ASSETS, 'road.png')) else None
 
-# === Colors ===
 WHITE = (255, 255, 255)
 GRAY = (50, 50, 50)
 RED = (200, 0, 0)
@@ -47,7 +43,6 @@ YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 
 
-# === Matatu class ===
 class Matatu:
     def __init__(self):
         self.lane = 1
@@ -56,7 +51,7 @@ class Matatu:
         self.speed = 8
         self.braking = False
         self.target_x = self.x
-        self.lane_change_speed = 15  # pixels per frame
+        self.lane_change_speed = 15 
 
     def move_left(self):
         if self.lane > 0:
@@ -75,11 +70,11 @@ class Matatu:
         self.braking = False
 
     def update(self):
-        # Smooth lane change animation
+    
         if abs(self.x - self.target_x) > 2:
             direction = 1 if self.target_x > self.x else -1
             self.x += direction * self.lane_change_speed
-            # Clamp position
+        
             if (direction == 1 and self.x > self.target_x) or (direction == -1 and self.x < self.target_x):
                 self.x = self.target_x
 
@@ -87,7 +82,6 @@ class Matatu:
         surface.blit(MATATU_IMG, (self.x, self.y))
 
 
-# === Obstacle class ===
 class Obstacle:
     def __init__(self, kind):
         self.kind = kind
@@ -118,9 +112,6 @@ class Obstacle:
             return pygame.Rect(self.x, self.y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT)
         else:
             return pygame.Rect(self.x, self.y, OBSTACLE_WIDTH, ZEBRA_HEIGHT)
-
-
-# === Main game loop ===
 def main():
     matatu = Matatu()
     obstacles = []
@@ -137,14 +128,12 @@ def main():
     ZEBRA_STOP_TIME = 7 * FPS
 
     while running:
-        # Draw scrolling background road
         if ROAD_IMG:
             road_scroll = (road_scroll + road_speed) % HEIGHT
             screen.blit(ROAD_IMG, (0, road_scroll - HEIGHT))
             screen.blit(ROAD_IMG, (0, road_scroll))
         else:
             screen.fill(GRAY)
-            # Draw lane dividers between lanes
             lane_line_height = 40
             lane_gap = 90
             road_scroll = (road_scroll + road_speed) % (lane_line_height + lane_gap)
@@ -155,13 +144,9 @@ def main():
                 while y < HEIGHT:
                     pygame.draw.rect(screen, WHITE, (divider_x - 5, y, 10, lane_line_height))
                     y += lane_line_height + lane_gap
-
-        # Handle quit
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
-        # Spawn obstacles
         spawn_timer += 1
         zebra_timer += 1
         if spawn_timer > 60:
@@ -170,17 +155,11 @@ def main():
         if zebra_timer > ZEBRA_INTERVAL:
             obstacles.append(Obstacle('zebra'))
             zebra_timer = 0
-
-        # Update positions
         for obs in obstacles:
             obs.speed = 8 if not matatu.braking else 2
             obs.update()
         matatu.update()
-
-        # Remove off-screen obstacles
         obstacles = [obs for obs in obstacles if obs.y < HEIGHT]
-
-        # Collision and zebra logic
         matatu_rect = pygame.Rect(matatu.x, matatu.y, MATATU_WIDTH, MATATU_HEIGHT)
         closest = None
         zebra_ahead = None
@@ -215,18 +194,12 @@ def main():
                 matatu.brake()
         else:
             matatu.release_brake()
-
-        # Collision detection
         for obs in obstacles:
             if matatu_rect.colliderect(obs.get_rect()):
                 running = False
-
-        # Draw everything
         matatu.draw(screen)
         for obs in obstacles:
             obs.draw(screen)
-
-        # Score display
         score += 1
         score_text = font.render(f'Score: {score}', True, WHITE)
         screen.blit(score_text, (10, 10))
@@ -234,11 +207,11 @@ def main():
         pygame.display.flip()
         clock.tick(FPS)
 
-    # Game over
-    game_over_text = font.render('Game Over!', True, RED)
+    
+    game_over_text = font.render('GAME OVER!', True, RED)
     screen.blit(game_over_text, (WIDTH // 2 - 100, HEIGHT // 2))
     pygame.display.flip()
-    pygame.time.wait(2000)
+    pygame.time.wait(2050)
     pygame.quit()
     sys.exit()
 
